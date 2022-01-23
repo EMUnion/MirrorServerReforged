@@ -1,6 +1,5 @@
 from email.headerregistry import Address
 from importlib.resources import path
-import sys
 import shutil
 import os
 import json
