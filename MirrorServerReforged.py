@@ -114,6 +114,8 @@ def Stop(server):
             Started = False
         else:
             server.reply('§b[MirrorServerReforged] §6Rcon连接失败，请检查网络原因或配置信息是否正确！')
+    else:
+        server.reply('§b[MirrorServerReforged] §6无法在主服务器停止宿服务器，因为Rcon未开启！')
 
 
 
