@@ -8,7 +8,7 @@ from xmlrpc.client import FastUnmarshaller
 # MCDR Command & Class
 from mcdreforged.api.decorator import new_thread
 from mcdreforged.api.command import Literal, Text
-from mcdreforged.api.rcon import rcon
+from mcdreforged.api.rcon import RconConnection
 # Initalize Start
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
@@ -24,7 +24,13 @@ PLUGIN_METADATA = {
 
 config = {
     'world': ['world'],
-    'command': 'python3 -m MCDReforged'
+    'command': 'python3 -m MCDReforged',
+    'rcon': {
+        'enable': False,
+        'host': 'localhost',
+        'port': 25575,
+        'password': 'password'
+    }
 }
 
 help_msg = '''
@@ -58,6 +64,10 @@ def CreateConfig():
         f.close()
 
 
+def RconInit(host, port, password):
+    Rcon = RconConnection(host, port, password)
+    return Rcon
+
 def LoadConfig():
     global config
     with open('./config/MirrorServerReforged.json', 'r', encoding="utf-8") as f:
@@ -68,22 +78,33 @@ def Sync():
     if os.path.exists('./Mirror/world') and MCDR == True:
         shutil.copytree('./server/world/', './Mirror/world/')
     else:
-
+        for world in config['world']:
+            shutil.copytree('./server/{}/'.format(world), './Mirror/{}/'.format(world))
 
 
 @new_thread('MirrorServerReforged')
 def Start(server):
     global Started
     if Started:
-        server.reply('Mirror server is already running.')
+        server.reply('b[MirrorServerReforged] §6Mirror server is already running.')
     else:
         Started = True
         os.system(config['command'])
     Started = False
 
 
-def Stop():
-    pass
+def Stop(server):
+    if config['rcon']['enable']:
+        conn = RconInit(config['rcon']['host'], config['rcon']['port'], config['rcon']['password'])
+        connected = conn.connect()
+        if connected:
+            conn.send('stop')
+            conn.disconnect()
+            global Started
+            Started = False
+        else:
+            server.reply('§b[MirrorServerReforged] §6Rcon connection failed.')
+
 
 
 def Reload():
