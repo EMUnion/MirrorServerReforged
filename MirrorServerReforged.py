@@ -33,8 +33,13 @@ config = {
     }
 }
 
-help_msg = '''
-'''
+help_msg = '''{:=^50}
+§b!!msr help §r- §6显示帮助信息
+§b!!msr sync §r- §6同步服务器地图至镜像
+§b!!msr reload §r- §6重载配置文件
+§b!!msr start §r- §6启动镜像服务器
+§b!!msr stop §r- §6关闭镜像服务器（需要开启Rcon）
+{:=^50}'''.format('§b[MirrorServerReforged] 帮助信息', '§b[MirrorServerReforged] Version: {}'.format(PLUGIN_METADATA['version']))
 
 Started = False  # Mirror server status
 MCDR = False    # MCDR mode controller
@@ -86,12 +91,18 @@ def Sync():
 def Start(server):
     global Started
     if Started:
-        server.reply('b[MirrorServerReforged] §6Mirror server is already running.')
+        server.reply('b[MirrorServerReforged] §6镜像服正在运行……')
     else:
         Started = True
         os.system(config['command'])
     Started = False
 
+
+def Status(server):
+    if Started:
+        server.reply('§b[MirrorServerReforged] §6镜像服正在运行……')
+    else:
+        server.reply('§b[MirrorServerReforged] §6镜像服未运行……')
 
 def Stop(server):
     if config['rcon']['enable']:
@@ -103,7 +114,7 @@ def Stop(server):
             global Started
             Started = False
         else:
-            server.reply('§b[MirrorServerReforged] §6Rcon connection failed.')
+            server.reply('§b[MirrorServerReforged] §6Rcon连接失败，请检查网络原因或配置信息是否正确！')
 
 
 
@@ -126,7 +137,7 @@ def ConfigToDo():
 def on_load(server, prev):
     ConfigToDo()    # Load Config
     InitalizeOnFirstRun()   # Initalize if this is the first run
-    server.register_help_message('!!msr', 'MirrorServerReforged Help')
+    server.register_help_message('!!msr', 'MirrorServerReforged 帮助')
     server.register_command(Literal('!!msr').runs(DisplayHelp)
                             .then(Literal('help').runs(DisplayHelp))
                             .then(Literal('sync').runs(Sync))
@@ -135,6 +146,3 @@ def on_load(server, prev):
                             .then(Literal('stop').runs(Stop))
                             )
 
-
-def on_user_info(server, info):
-    if info.
