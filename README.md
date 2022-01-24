@@ -13,6 +13,11 @@
 - 创建`Mirror`文件夹以用于存放镜像服文件
 - 在`Mirror`文件夹下创建`./server/world/`/`./world`（取决于你是否使用MCDR，默认为使用）
 
+但这些是仅仅不够的，你还需要做以下的操作：
+- 将你的服务器核心以及各种服务器依赖放入`./Mirror/server`内
+- 修改你的`./Mirror/`的`config.yml`中的启动命令以及rcon相关信息
+- 修改你的`./Mirror/server/server.properties`的内容，特别是要注意端口以及rcon相关内容，避免与主服务器冲突
+
 ## 配置文件
 
 如果需要修改插件配置，只需要修改`config`文件夹下的`MirrorServerReforged.json`即可！
