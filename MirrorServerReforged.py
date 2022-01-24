@@ -90,28 +90,30 @@ def LoadConfig():
 
 
 def Sync(server):
-    server.reply('§b[MirrorServerReforged] §6正在同步服务器地图……')
+    server.execute('say §b[MirrorServerReforged] §6正在同步服务器地图……')
     if os.path.exists('./Mirror/world') and MCDR == True:
         shutil.copytree('./server/world/', './Mirror/world/')
     else:
         for world in config['world']:
             shutil.copytree('./server/{}/'.format(world),
                             './Mirror/{}/'.format(world))
-    server.reply('§b[MirrorServerReforged] §6同步完成！')
+    server.exexute('say §b[MirrorServerReforged] §6同步完成！')
 
 
 @new_thread('MirrorServerReforged')
 def Start(server):
     global Started
     if Started:
-        server.reply('b[MirrorServerReforged] §6镜像服正在运行……')
+        server.reply('§b[MirrorServerReforged] §6镜像服正在运行……')
     else:
-        server.reply('§b[MirrorServerReforged] §6正在启动镜像服，这可能需要一定的时间……')
-        server.reply(
-            '§b[MirrorServerReforged] §6启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
+        server.execute('say §b[MirrorServerReforged] §6正在启动镜像服，这可能需要一定的时间……')
+        server.execute(
+            'say §b[MirrorServerReforged] §6启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
         Started = True
+        os.system('cd ./Mirror')
         os.system(config['command'])
-        server.reply('§b[MirrorServerReforged] §6镜像服已关闭！')
+        os.system('cd ..')
+        server.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
     Started = False
 
 
