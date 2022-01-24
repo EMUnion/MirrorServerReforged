@@ -61,9 +61,10 @@ def InitalizeOnFirstRun():
             except:
                 print('[MirrorServerReforged] Mirror文件夹已存在！')
             os.makedirs('./Mirror/server')
-            os.system('cd ./Mirror')
+            os.chdir('Mirror')
             os.system('python3 -m MCDReforged init')    # Create MCDR dictionary structure
-            os.system('cd ..')
+            os.makedirs('./server/world')
+            os.chdir(path)
         else:   # MCDR mode off, turn into legacy mode. Like Vanilla, Bukkit, Waterfalls and so on.
             print('[MirrorServerReforged] 未检测到MCDR，我们将会按照普通服务器的目录结构创建文件夹')
             try:
