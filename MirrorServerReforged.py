@@ -12,7 +12,7 @@ PLUGIN_METADATA = {
     'name': 'MirrorServerReforged',
     'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.',
     'author': 'GamerNoTitle',
-    'link': 'https://github.com/GamerNoTitle/MirrorServerReforged',
+    'link': 'https://github.com/EMUnion/MirrorServerReforged',
     'dependencies': {
         'mcdreforged': '>=2.0.0'
     }
