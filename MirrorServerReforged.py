@@ -1,6 +1,7 @@
 import shutil
 import os
 import json
+import sys
 # MCDR Command & Class
 from mcdreforged.api.decorator import new_thread
 from mcdreforged.api.command import Literal, Text
@@ -36,16 +37,18 @@ help_msg = '''{:=^50}
 §b!!msr reload §r- §6重载配置文件
 §b!!msr start §r- §6启动镜像服务器
 §b!!msr stop §r- §6关闭镜像服务器（需要开启Rcon）
+§b!!msr init §r- §6初始化镜像服务器（仅MCDR类服务器可用）
+§b!!msr status §r- §6查看镜像服务器状态
 {:=^50}'''.format(' §b[MirrorServerReforged] 帮助信息 §r', ' §b[MirrorServerReforged] Version: {} §r'.format(PLUGIN_METADATA['version']))
 
 Started = False  # Mirror server status
 MCDR = False    # MCDR mode controller
-
+path = os.getcwd()
 # Initalize End
 
 
 def InitalizeOnFirstRun():
-    if os.path.exists('./Mirror/MCDReforged.py') or 'MCDReforged' in config['command']:
+    if os.path.exists('./Mirror/MCDReforged.py') or 'mcdreforged' in config['command']:
         global MCDR
         MCDR = True     # Turn on MCDR mode
     if not os.path.exists('./Mirror'):
@@ -94,7 +97,7 @@ def LoadConfig():
 
 
 @new_thread('MSR-Sync')
-def ServerSync():
+def ServerSync(InterFace):
     ignore=shutil.ignore_patterns('session.lock')
     if MCDR:
         if os.path.exists('./Mirror/server/world'):
@@ -104,6 +107,8 @@ def ServerSync():
         for world in config['world']:
             shutil.rmtree('./Mirror/{}/'.format(world))
         shutil.copytree('./server/world/', './Mirror/world/',ignore=ignore)
+    InterFace.execute('say §b[MirrorServerReforged] §6同步完成！')
+
 
 
 def Sync():
@@ -111,15 +116,20 @@ def Sync():
     InterFace.execute('say §b[MirrorServerReforged] §6正在同步服务器地图……')
     InterFace.execute('save-off')
     InterFace.execute('save-all')
-    ServerSync()
+    ServerSync(InterFace)
     InterFace.execute('save-on')
-    InterFace.execute('say §b[MirrorServerReforged] §6同步完成！')
 
 @new_thread('MSR-Main')
-def ServerStart():
-    os.chdir('./Mirror')
-    os.system(config['command'])
-    os.chdir('..')
+def ServerStart(InterFace):
+    global Started
+    try:
+        os.chdir('Mirror')
+        os.system(config['command'])
+    except Exception as e:
+        InterFace.execute('say §b[MirrorServerReforged] §6启动失败！原因为：{}'.format(e))
+    os.chdir(path)
+    InterFace.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
+    Started = False
 
 def Start(server):
     global Started
@@ -131,10 +141,7 @@ def Start(server):
         InterFace.execute(
             'say §b[MirrorServerReforged] §6启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
         Started = True
-        ServerStart()
-        InterFace.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
-    Started = False
-
+        ServerStart(InterFace)
 
 def GetInterFace():
     global Interface
@@ -147,22 +154,24 @@ def Status(server):
     else:
         server.reply('§b[MirrorServerReforged] §6镜像服未运行……')
 
-
 def Stop(server):
-    if config['rcon']['enable']:
-        conn = RconInit(config['rcon']['host'], config['rcon']
-                        ['port'], config['rcon']['password'])
-        connected = conn.connect()
-        if connected:
-            conn.send('stop')
-            conn.disconnect()
-            global Started
-            Started = False
+    global Started
+    if Started:
+        if config['rcon']['enable']:
+            conn = RconInit(config['rcon']['host'], config['rcon']
+                            ['port'], config['rcon']['password'])
+            try:
+                connected = conn.connect()
+            except Exception as e:
+                server.reply('§b[MirrorServerReforged] §6无法停止镜像服！原因为：{}'.format(e))
+            if connected:
+                conn.send_command('stop',max_retry_time=3)
+                conn.disconnect()
+                Started = False
         else:
-            server.reply(
-                '§b[MirrorServerReforged] §6Rcon连接失败，请检查网络原因或配置信息是否正确！')
+            server.reply('§b[MirrorServerReforged] §6无法在主服务器停止宿服务器，因为Rcon未开启！')
     else:
-        server.reply('§b[MirrorServerReforged] §6无法在主服务器停止宿服务器，因为Rcon未开启！')
+        server.reply('§b[MirrorServerReforged] §6镜像服未运行！')
 
 
 def Reload(server):
@@ -174,6 +183,28 @@ def Reload(server):
 def DisplayHelp(server):
     for line in help_msg.splitlines():
         server.reply(line)
+
+@new_thread('MSR-Init')
+def MCDRInitalize(server):
+    if MCDR:
+        try:
+            os.chdir('Mirror')
+            system = sys.platform
+            if system == 'win32':
+                os.system('python -m mcdreforged init')     # Windows NT Platform
+            else:
+                os.system('python3 -m mcdreforged init')    # Linux/Unix Platform
+            server.reply('§b[MirrorServerReforged] §6初始化已完成！')
+        except Exception as e:
+            server.reply('§b[MirrorServerReforged] §6初始化失败！原因为：{}'.format(e))
+        os.chdir(path)
+    else:
+        server.reply('§b[MirrorServerReforged] §6非MCDR类服务器，无需初始化！')
+
+
+def Initalize(server):
+    server.reply('§b[MirrorServerReforged] §6已启动初始化进程！')
+    MCDRInitalize(server)
 
 
 def ConfigToDo():
@@ -193,4 +224,6 @@ def on_load(server, prev):
                             .then(Literal('reload').runs(Reload))
                             .then(Literal('start').runs(Start))
                             .then(Literal('stop').runs(Stop))
+                            .then(Literal('init').runs(Initalize))
+                            .then(Literal('status').runs(Status))
                             )
