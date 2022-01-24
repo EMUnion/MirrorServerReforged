@@ -5,6 +5,7 @@ import json
 from mcdreforged.api.decorator import new_thread
 from mcdreforged.api.command import Literal, Text
 from mcdreforged.api.rcon import RconConnection
+from mcdreforged.mcdr_server import ServerInterface
 # Initalize Start
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
@@ -20,7 +21,7 @@ PLUGIN_METADATA = {
 
 config = {
     'world': ['world'],
-    'command': 'python3 -m MCDReforged',
+    'command': 'python3 -m mcdreforged',
     'rcon': {
         'enable': False,
         'host': 'localhost',
@@ -35,7 +36,7 @@ help_msg = '''{:=^50}
 §b!!msr reload §r- §6重载配置文件
 §b!!msr start §r- §6启动镜像服务器
 §b!!msr stop §r- §6关闭镜像服务器（需要开启Rcon）
-{:=^50}'''.format('§b[MirrorServerReforged] 帮助信息', '§b[MirrorServerReforged] Version: {}'.format(PLUGIN_METADATA['version']))
+{:=^50}'''.format(' §b[MirrorServerReforged] 帮助信息 §r', ' §b[MirrorServerReforged] Version: {} §r'.format(PLUGIN_METADATA['version']))
 
 Started = False  # Mirror server status
 MCDR = False    # MCDR mode controller
@@ -57,6 +58,9 @@ def InitalizeOnFirstRun():
             except:
                 print('[MirrorServerReforged] Mirror文件夹已存在！')
             os.makedirs('./Mirror/server')
+            os.system('cd ./Mirror')
+            os.system('python3 -m MCDReforged init')    # Create MCDR dictionary structure
+            os.system('cd ..')
         else:   # MCDR mode off, turn into legacy mode. Like Vanilla, Bukkit, Waterfalls and so on.
             print('[MirrorServerReforged] 未检测到MCDR，我们将会按照普通服务器的目录结构创建文件夹')
             try:
@@ -89,33 +93,53 @@ def LoadConfig():
         config = json.load(f)
 
 
-def Sync(server):
-    server.execute('say §b[MirrorServerReforged] §6正在同步服务器地图……')
-    if os.path.exists('./Mirror/world') and MCDR == True:
-        shutil.copytree('./server/world/', './Mirror/world/')
+@new_thread('MSR-Sync')
+def ServerSync():
+    ignore=shutil.ignore_patterns('session.lock')
+    if MCDR:
+        if os.path.exists('./Mirror/server/world'):
+            shutil.rmtree('./Mirror/server/world')
+        shutil.copytree('./server/world/', './Mirror/server/world',ignore=ignore)
     else:
         for world in config['world']:
-            shutil.copytree('./server/{}/'.format(world),
-                            './Mirror/{}/'.format(world))
-    server.exexute('say §b[MirrorServerReforged] §6同步完成！')
+            shutil.rmtree('./Mirror/{}/'.format(world))
+        shutil.copytree('./server/world/', './Mirror/world/',ignore=ignore)
 
 
-@new_thread('MirrorServerReforged')
+def Sync():
+    InterFace = GetInterFace()
+    InterFace.execute('say §b[MirrorServerReforged] §6正在同步服务器地图……')
+    InterFace.execute('save-off')
+    InterFace.execute('save-all')
+    ServerSync()
+    InterFace.execute('save-on')
+    InterFace.execute('say §b[MirrorServerReforged] §6同步完成！')
+
+@new_thread('MSR-Main')
+def ServerStart():
+    os.chdir('./Mirror')
+    os.system(config['command'])
+    os.chdir('..')
+
 def Start(server):
     global Started
+    InterFace = GetInterFace()
     if Started:
         server.reply('§b[MirrorServerReforged] §6镜像服正在运行……')
     else:
-        server.execute('say §b[MirrorServerReforged] §6正在启动镜像服，这可能需要一定的时间……')
-        server.execute(
+        InterFace.execute('say §b[MirrorServerReforged] §6正在启动镜像服，这可能需要一定的时间……')
+        InterFace.execute(
             'say §b[MirrorServerReforged] §6启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
         Started = True
-        os.system('cd ./Mirror')
-        os.system(config['command'])
-        os.system('cd ..')
-        server.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
+        ServerStart()
+        InterFace.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
     Started = False
 
+
+def GetInterFace():
+    global Interface
+    InterFace = ServerInterface.get_instance().as_plugin_server_interface()
+    return InterFace
 
 def Status(server):
     if Started:
