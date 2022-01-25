@@ -1,6 +1,6 @@
 {
   "id": "mirror_server_reforged",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "MirrorServerReforged",
   "description": {
     "en_us": "A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.",

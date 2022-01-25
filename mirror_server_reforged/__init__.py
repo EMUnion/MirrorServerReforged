@@ -10,7 +10,7 @@ from mcdreforged.mcdr_server import ServerInterface
 # Initalize Start
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
-    'version': '1.0.0',
+    'version': '1.0.1',
     'name': 'MirrorServerReforged',
     'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.',
     'author': 'GamerNoTitle',
@@ -62,7 +62,7 @@ def InitalizeOnFirstRun():
                 print('[MirrorServerReforged] Mirror文件夹已存在！')
             os.makedirs('./Mirror/server')
             os.chdir('Mirror')
-            os.system('python3 -m MCDReforged init')    # Create MCDR dictionary structure
+            os.system('python3 -m mcdreforged init')    # Create MCDR dictionary structure
             os.makedirs('./server/world')
             os.chdir(path)
         else:   # MCDR mode off, turn into legacy mode. Like Vanilla, Bukkit, Waterfalls and so on.
