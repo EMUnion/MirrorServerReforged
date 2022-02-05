@@ -8,6 +8,12 @@ from mcdreforged.api.command import Literal, Text
 from mcdreforged.api.rcon import RconConnection
 from mcdreforged.mcdr_server import ServerInterface
 # Initalize Start
+platform = sys.platform
+if sys.platform == 'win32':
+    MCDR_Command = 'python -m mcdreforged'
+else:
+    MCDR_Command = 'python3 -m mcdreforged'
+
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
     'version': '1.0.1',
@@ -22,7 +28,7 @@ PLUGIN_METADATA = {
 
 config = {
     'world': ['world'],
-    'command': 'python3 -m mcdreforged',
+    'command': MCDR_Command,
     'rcon': {
         'enable': False,
         'host': 'localhost',
