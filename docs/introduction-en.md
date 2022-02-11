@@ -6,8 +6,6 @@ A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-
 
 I'll simply introduce it.
 
-**CAUTION: MSR will change the working-dictionary while the mirror server is online. If you wanna use the plugin functions about files (for example QBM), you should stop the mirror server first before you use them.**
-
 ## Getting Started
 
 This plugin will initalize when the first run, it will do the following opeartions
