@@ -11,6 +11,7 @@ from mcdreforged.mcdr_server import ServerInterface
 from setuptools import Command
 # Initalize Start
 platform = sys.platform
+
 if sys.platform == 'win32':
     MCDR_Command = 'python -m mcdreforged'
 else:
@@ -136,6 +137,7 @@ def CommandExecute(InterFace):
         None
     os.chdir(path)
     InterFace.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
+    global Started
     Started = False
 
 @new_thread('MSR-Main')
