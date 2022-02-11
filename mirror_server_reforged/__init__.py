@@ -2,11 +2,13 @@ import shutil
 import os
 import json
 import sys
+import time
 # MCDR Command & Class
 from mcdreforged.api.decorator import new_thread
 from mcdreforged.api.command import Literal, Text
 from mcdreforged.api.rcon import RconConnection
 from mcdreforged.mcdr_server import ServerInterface
+from setuptools import Command
 # Initalize Start
 platform = sys.platform
 if sys.platform == 'win32':
@@ -126,17 +128,27 @@ def Sync():
     ServerSync(InterFace)
     InterFace.execute('save-on')
 
+@new_thread('MSR-Start')
+def CommandExecute(InterFace):
+    try:
+        os.system(config['command'])
+    except:
+        None
+    os.chdir(path)
+    InterFace.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
+    Started = False
+
 @new_thread('MSR-Main')
 def ServerStart(InterFace):
     global Started
     try:
         os.chdir('Mirror')
-        os.system(config['command'])
+        CommandExecute(InterFace)
+        time.sleep(5)
+        os.chdir(path)
     except Exception as e:
         InterFace.execute('say §b[MirrorServerReforged] §6启动失败！原因为：{}'.format(e))
-    os.chdir(path)
-    InterFace.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
-    Started = False
+
 
 def Start(server):
     global Started
