@@ -1,13 +1,13 @@
 {
   "id": "mirror_server_reforged",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "name": "MirrorServerReforged",
   "description": {
     "en_us": "A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.",
     "zh_cn": "[MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server)的重置版，适用于MCDR 2.0+的镜像服插件"
   },
   "dependencies": {
-    "mcdreforged": ">=2.0.0"
+    "mcdreforged": ">=2.6.0"
   },
   "resources": ["docs", "README.md"],
   "author": "GamerNoTitle",
