@@ -154,7 +154,7 @@ def CommandExecute(InterFace):
         if platform == 'win32':
             MirrorProcess = os.popen(f"start {config['command']}")
         else:
-            MirrorProcess = os.popen(f"nohup {config['command']} &> MSR.log &")
+            MirrorProcess = os.popen(f"{config['command']}")
     except:
         pass
     os.chdir(path)
