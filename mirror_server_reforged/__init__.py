@@ -3,6 +3,7 @@ import os
 import json
 import sys
 import time
+import datetime
 # MCDR Command & Class
 from mcdreforged.api.decorator import new_thread
 from mcdreforged.api.command import Literal, Text, SimpleCommandBuilder
@@ -20,7 +21,7 @@ else:
 
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
-    'version': '1.0.4',
+    'version': '1.0.5',
     'name': 'MirrorServerReforged',
     'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.',
     'author': 'GamerNoTitle',
@@ -55,6 +56,7 @@ help_msg = '''{:=^50}
 # Started = False  # Mirror server status
 MCDR = False    # MCDR mode controller
 path = os.getcwd()
+syncFlag = False
 # Initalize End
 
 
@@ -111,26 +113,35 @@ def LoadConfig():
 
 @new_thread('MSR-Sync')
 def ServerSync(InterFace):
+    start_time = datetime.datetime.now()
     ignore = shutil.ignore_patterns('session.lock')
     if MCDR:
         if os.path.exists('./Mirror/server/world'):
             shutil.rmtree('./Mirror/server/world')
-        shutil.copytree('./server/world/',
-                        './Mirror/server/world', ignore=ignore)
+        # shutil.copytree('./server/world/',
+        #                 './Mirror/server/world', ignore=ignore)
+        os.system(f'cp -r ./server/world ./Mirror/server/world')
     else:
         for world in config['world']:
             shutil.rmtree('./Mirror/{}/'.format(world))
-        shutil.copytree('./server/world/', './Mirror/world/', ignore=ignore)
-    InterFace.execute('say §b[MirrorServerReforged] §6同步完成！')
+            # shutil.copytree('./server/world/', './Mirror/world/', ignore=ignore)
+            os.system(f'cp -r ./server/{world} ./Mirror/{world}')
+    end_time = datetime.datetime.now()
+    InterFace.execute(
+        f'say §b[MirrorServerReforged] §6同步完成！用时{end_time-start_time}')
 
 
 def Sync():
     InterFace = GetInterFace()
-    InterFace.execute('say §b[MirrorServerReforged] §6正在同步服务器地图……')
-    InterFace.execute('save-off')
-    InterFace.execute('save-all')
-    ServerSync(InterFace)
-    InterFace.execute('save-on')
+    if syncFlag:
+        InterFace.execute(
+            'say §b[MirrorServerReforged] §d服务器正在进行同步，请不要重复提交同步任务！')
+    else:
+        InterFace.execute('say §b[MirrorServerReforged] §6正在同步服务器地图……')
+        InterFace.execute('save-off')
+        InterFace.execute('save-all')
+        ServerSync(InterFace)
+        InterFace.execute('save-on')
 
 
 @new_thread('MSR-Start')
@@ -140,7 +151,7 @@ def CommandExecute(InterFace):
         if platform == 'win32':
             MirrorProcess = os.popen(f"start {config['command']}")
         else:
-            MirrorProcess = os.popen(f"nohup {config['command']} &")
+            MirrorProcess = os.popen(f"nohup {config['command']} &> MSR.log &")
     except:
         pass
     os.chdir(path)
@@ -252,22 +263,22 @@ def ConfigToDo():
 def on_load(server, prev):
     ConfigToDo()    # Load Config
     InitalizeOnFirstRun()   # Initalize if this is the first run
-    builder = SimpleCommandBuilder()
+    # builder = SimpleCommandBuilder()
     server.register_help_message('!!msr', 'MirrorServerReforged 帮助')
-    # server.register_command(Literal('!!msr').runs(DisplayHelp)
-    #                         .then(Literal('help').runs(DisplayHelp))
-    #                         .then(Literal('sync').runs(Sync))
-    #                         .then(Literal('reload').runs(Reload))
-    #                         .then(Literal('start').runs(Start))
-    #                         .then(Literal('stop').runs(Stop))
-    #                         .then(Literal('init').runs(Initalize))
-    #                         # .then(Literal('status').runs(Status))
-    #                         )
+    server.register_command(Literal('!!msr').runs(DisplayHelp)
+                            .then(Literal('help').runs(DisplayHelp))
+                            .then(Literal('sync').runs(Sync))
+                            .then(Literal('reload').runs(Reload))
+                            .then(Literal('start').runs(Start))
+                            .then(Literal('stop').runs(Stop))
+                            .then(Literal('init').runs(Initalize))
+                            # .then(Literal('status').runs(Status))
+                            )
     # register stop confirm command (TOO LAZY TO REBUILD THE PREVIOUS COMMAND)
-    builder.command('!!msr help', DisplayHelp)
-    builder.command('!!msr sync', Sync)
-    builder.command('!!msr reload', Reload)
-    builder.command('!!msr start', Start)
-    builder.command('!!msr stop', Stop)
-    builder.command('!!msr init', Initalize)
-    builder.register(server)
+    # builder.command('!!msr help', DisplayHelp)
+    # builder.command('!!msr sync', Sync)
+    # builder.command('!!msr reload', Reload)
+    # builder.command('!!msr start', Start)
+    # builder.command('!!msr stop', Stop)
+    # builder.command('!!msr init', Initalize)
+    # builder.register(server)
