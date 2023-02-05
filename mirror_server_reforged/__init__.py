@@ -113,6 +113,8 @@ def LoadConfig():
 
 @new_thread('MSR-Sync')
 def ServerSync(InterFace):
+    global syncFlag
+    syncFlag = True
     start_time = datetime.datetime.now()
     ignore = shutil.ignore_patterns('session.lock')
     if MCDR:
@@ -129,6 +131,7 @@ def ServerSync(InterFace):
     end_time = datetime.datetime.now()
     InterFace.execute(
         f'say §b[MirrorServerReforged] §6同步完成！用时{end_time-start_time}')
+    syncFlag = False
 
 
 def Sync():
