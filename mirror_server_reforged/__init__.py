@@ -182,11 +182,14 @@ def Start(server):
     # if Started:
     #     server.reply('§b[MirrorServerReforged] §6镜像服正在运行……')
     # else:
-    InterFace.execute('say §b[MirrorServerReforged] §6正在启动镜像服，这可能需要一定的时间……')
-    InterFace.execute(
-        'say §b[MirrorServerReforged] §6启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
-    # Started = True
-    ServerStart(InterFace)
+    if syncFlag:
+        InterFace.execute('say §b[MirrorServerReforged] §d§l镜像服正在进行同步，请在同步完成后再启动镜像服！')
+    else:
+        InterFace.execute('say §b[MirrorServerReforged] §6正在启动镜像服，这可能需要一定的时间……')
+        InterFace.execute(
+            'say §b[MirrorServerReforged] §6启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
+        # Started = True
+        ServerStart(InterFace)
 
 
 def GetInterFace(*args):
