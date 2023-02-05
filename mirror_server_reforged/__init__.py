@@ -21,7 +21,7 @@ else:
 
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
-    'version': '1.0.5',
+    'version': '1.0.5-dev',
     'name': 'MirrorServerReforged',
     'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.',
     'author': 'GamerNoTitle',
@@ -154,7 +154,7 @@ def CommandExecute(InterFace):
         if platform == 'win32':
             MirrorProcess = os.popen(f"start {config['command']}")
         else:
-            MirrorProcess = os.popen(f"{config['command']}")
+            MirrorProcess = os.popen(f"nohup {config['command']} &")
     except:
         pass
     os.chdir(path)
