@@ -21,7 +21,7 @@ else:
 
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
-    'version': '1.0.5-dev',
+    'version': '1.0.6',
     'name': 'MirrorServerReforged',
     'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.',
     'author': 'GamerNoTitle',
@@ -118,16 +118,22 @@ def ServerSync(InterFace):
     start_time = datetime.datetime.now()
     ignore = shutil.ignore_patterns('session.lock')
     if MCDR:
-        if os.path.exists('./Mirror/server/world'):
-            shutil.rmtree('./Mirror/server/world')
-        # shutil.copytree('./server/world/',
-        #                 './Mirror/server/world', ignore=ignore)
-        os.system(f'cp -r ./server/world ./Mirror/server/world')
+        for world in config['world']:
+            if os.path.exists(f'./Mirror/server/{world}'):
+                shutil.rmtree(f'./Mirror/{world}/')
+            # shutil.copytree('./server/world/', './Mirror/world/', ignore=ignore)
+            if sys.platform == 'win32':
+                os.system(f'xcopy ./server/{world} ./Mirror/server/{world} /e /h /k /y')
+            else:
+                os.system(f'cp -r ./server/{world} ./Mirror/server/{world}')
     else:
         for world in config['world']:
-            shutil.rmtree('./Mirror/{}/'.format(world))
-            # shutil.copytree('./server/world/', './Mirror/world/', ignore=ignore)
-            os.system(f'cp -r ./server/{world} ./Mirror/{world}')
+            if os.path.exists(f'./Mirror/server/{world}'):
+                shutil.rmtree(f'./Mirror/{world}/')
+            if sys.platform == 'win32':
+                os.system(f'xcopy ./server/{world} ./Mirror/{world} /e /h /k /y')
+            else:
+                os.system(f'cp -r ./server/{world} ./Mirror/{world}')
     end_time = datetime.datetime.now()
     InterFace.execute(
         f'say §b[MirrorServerReforged] §6同步完成！用时{end_time-start_time}')
@@ -154,7 +160,7 @@ def CommandExecute(InterFace):
         if platform == 'win32':
             MirrorProcess = os.popen(f"start {config['command']}")
         else:
-            MirrorProcess = os.popen(f"nohup {config['command']} &")
+            MirrorProcess = os.popen(f"{config['command']}")
     except:
         pass
     os.chdir(path)
