@@ -123,7 +123,7 @@ def ServerSync(InterFace):
                 shutil.rmtree(f'./Mirror/server/{world}/')
             # shutil.copytree('./server/world/', './Mirror/world/', ignore=ignore)
             if sys.platform == 'win32':
-                os.system(f'copy ./server/{world} ./Mirror/server/{world} /e /h /k /y')
+                os.system(f'copy ./server/{world} ./Mirror/server/{world} /Y')
             else:
                 os.system(f'cp -r ./server/{world} ./Mirror/server/{world}')
     else:
@@ -131,7 +131,7 @@ def ServerSync(InterFace):
             if os.path.exists(f'./Mirror/{world}'):
                 shutil.rmtree(f'./Mirror/{world}/')
             if sys.platform == 'win32':
-                os.system(f'xcopy ./server/{world} ./Mirror/{world} /e /h /k /y')
+                os.system(f'xcopy ./server/{world} ./Mirror/{world} /Y')
             else:
                 os.system(f'cp -r ./server/{world} ./Mirror/{world}')
     end_time = datetime.datetime.now()
