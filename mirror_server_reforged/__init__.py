@@ -21,7 +21,7 @@ else:
 
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
-    'version': '1.0.6',
+    'version': '1.0.7',
     'name': 'MirrorServerReforged',
     'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.',
     'author': 'GamerNoTitle',
@@ -39,7 +39,9 @@ config = {
         'host': 'localhost',
         'port': 25575,
         'password': 'password'
-    }
+    },
+    'source': './server',
+    'target': './Mirror/server'
 }
 
 help_msg = '''{:=^50}
@@ -109,6 +111,11 @@ def LoadConfig():
     global config
     with open('./config/MirrorServerReforged.json', 'r', encoding="utf-8") as f:
         config = json.load(f)
+    if 'source' not in config:
+        config['source'] = './server'
+    if 'target' not in config:
+        config['target'] = './Mirror/server'
+    CreateConfig()
 
 
 @new_thread('MSR-Sync')
@@ -117,25 +124,17 @@ def ServerSync(InterFace):
     syncFlag = True
     start_time = datetime.datetime.now()
     ignore = shutil.ignore_patterns('session.lock')
-    if MCDR:
-        for world in config['world']:
-            if os.path.exists(f'./Mirror/server/{world}'):
-                shutil.rmtree(f'./Mirror/server/{world}/')
-            # shutil.copytree('./server/world/', './Mirror/world/', ignore=ignore)
-            if sys.platform == 'win32':
-                os.mkdir(f'./Mirror/server/{world}')
-                os.system(f'xcopy "./server/{world}" "./Mirror/server/{world}" /e /h /k /y')
-            else:
-                os.system(f'cp -r ./server/{world} ./Mirror/server/{world}')
-    else:
-        for world in config['world']:
-            if os.path.exists(f'./Mirror/{world}'):
-                shutil.rmtree(f'./Mirror/{world}/')
-            if sys.platform == 'win32':
-                os.mkdir(f'./Mirror/{world}')
-                os.system(f'xcopy "./server/{world}" "./Mirror/{world}" /e /h /k /y')
-            else:
-                os.system(f'cp -r ./server/{world} ./Mirror/{world}')
+    for world in config['world']:
+        if os.path.exists(f'{config["target"]}/{world}'):
+            shutil.rmtree(f'{config["target"]}/{world}/')
+        if sys.platform == 'win32':
+            shutil.copytree(f'{config["source"]}/{world}', f'{config["target"]}/{world}', ignore=ignore)
+            # os.mkdir(f'{config["target"]}/{world}')
+            # with open('./exclude.txt', 'wt') as f:
+            #     f.write('session.lock')
+            # os.system(f'xcopy "{config["source"]}/{world}" "{config["target"]}/{world}" /e /h /k /y /exclude:{config["source"]}/*/session.lock /exclude:{config["source"]}/*/level.*')
+        else:
+            os.system(f'cp -r {config["source"]}/{world} {config["target"]}/{world}')
     end_time = datetime.datetime.now()
     InterFace.execute(
         f'say §b[MirrorServerReforged] §6同步完成！用时{end_time-start_time}')
