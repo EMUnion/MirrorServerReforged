@@ -8,15 +8,17 @@ I'll simply introduce it.
 
 ## Getting Started
 
-This plugin will initalize when the first run, it will do the following opeartions
+This plugin will initalize when the first run, it will do the following opeartions (the path can be changed in the config)
 - Create `MirrorServerReforged.json` in your `config` folder and fill the default config in it
 - Create`Mirror` folder to store your files of mirror server
 - Create `./server/world/`/`./world` in `Mirror` folder (This depends on whether you use MCDR or not, use as default)
 
-But these operations are not enough, what you need to do are as following
+But these operations are not enough, what you need to do are as following (the path can be changed in the config)
 - Put your server core and dependencies into `./Mirror/server` folder
 - Edit start command and rcon information in file `config.yml` in the folder`./Mirror/`
 - Edit the content in `./Mirror/server/server.properties`. What you need to pay attention to is the ports of the mirror server and rcon related information in order to avoid encountering to the main server
+
+It's not essential for a mirror server to be a MCDR server, you can use the vanilla or something else.
 
 ## Config
 
@@ -33,7 +35,9 @@ If you want to change the config of this plugin, you can change the content of `
     "host":"localhost",
     "port":25565,
     "password":"password"
-  }
+  },
+  "source": "./server",
+  "target': './Mirror/server"
 }
 ```
 
@@ -45,6 +49,8 @@ Now, I'll introduce the content of the config file:
     - `host` is the address of your mirror server, change it as your need.
     - `port` is the port of your mirror server, change it as your need.
     - `password` is the password of the rcon feature on your mirror server, change it as your need.
+- `source` is the save folder of you main server save.
+- `target` is the save folder of your mirror server save.
 
 ## Command List
 
