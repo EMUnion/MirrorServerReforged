@@ -4,12 +4,12 @@ import json
 import sys
 import time
 import datetime
+import subprocess
 # MCDR Command & Class
 from mcdreforged.api.decorator import new_thread
 from mcdreforged.api.command import Literal, Text, SimpleCommandBuilder
 from mcdreforged.api.rcon import RconConnection
 from mcdreforged.mcdr_server import ServerInterface
-from setuptools import Command
 # Initalize Start
 platform = sys.platform
 Interface = None
@@ -21,9 +21,9 @@ else:
 
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
-    'version': '1.0.7',
+    'version': '1.0.8-α',
     'name': 'MirrorServerReforged',
-    'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.0+.',
+    'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.6.0+.',
     'author': 'GamerNoTitle',
     'link': 'https://github.com/EMUnion/MirrorServerReforged',
     'dependencies': {
@@ -157,18 +157,14 @@ def Sync():
 @new_thread('MSR-Start')
 def CommandExecute(InterFace):
     try:
-        global MirrorPID, MirrorProcess
+        global MirrorProcess
         if platform == 'win32':
-            MirrorProcess = os.popen(f"start {config['command']}")
+            MirrorProcess = subprocess.Popen(config['command'], creationflags=subprocess.CREATE_NEW_CONSOLE)
         else:
-            MirrorProcess = os.popen(f"{config['command']}")
-    except:
-        pass
+            MirrorProcess = subprocess.Popen(config['command'], shell=True)
+    except Exception as e:
+        InterFace.execute(f'say §b[MirrorServerReforged] §6启动失败！原因为：{e}')
     os.chdir(path)
-    # InterFace.execute('say §b[MirrorServerReforged] §6镜像服已关闭！')
-    # global Started
-    # Started = False
-
 
 @new_thread('MSR-Main')
 def ServerStart(InterFace):
