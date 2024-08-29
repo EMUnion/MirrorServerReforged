@@ -37,7 +37,7 @@
     "password":"password"
   },
   "source": "./server",
-  "target': "./Mirror/server"
+  "target": "./Mirror/server"
 }
 ```
 
