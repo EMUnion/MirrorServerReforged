@@ -5,10 +5,12 @@ import sys
 import time
 import datetime
 import subprocess
+import tempfile
 # MCDR Command & Class
 from mcdreforged.api.decorator import new_thread
 from mcdreforged.api.command import Literal, Text, SimpleCommandBuilder
 from mcdreforged.api.rcon import RconConnection
+from mcdreforged.api.rtext import RColor, RText, RTextList
 from mcdreforged.mcdr_server import ServerInterface
 # Initalize Start
 platform = sys.platform
@@ -21,7 +23,7 @@ else:
 
 PLUGIN_METADATA = {
     'id': 'mirror_server_reforged',
-    'version': '1.0.8-alpha',
+    'version': '1.0.8-alpha.1',
     'name': 'MirrorServerReforged',
     'description': 'A reforged version of [MCDR-Mirror-Server](https://github.com/GamerNoTitle/MCDR-Mirror-Server), which is a plugin for MCDR-Reforged 2.6.0+.',
     'author': 'GamerNoTitle',
@@ -118,40 +120,84 @@ def LoadConfig():
     CreateConfig()
 
 
+def Broadcast(InterFace, message, color=RColor.gold):
+    """Broadcast without putting legacy section signs in a server command."""
+    InterFace.say(RTextList(
+        RText('[MirrorServerReforged] ', RColor.aqua),
+        RText(message, color)
+    ))
+
+
+def CopyWorld(source_root, target_root, world):
+    """Copy a world into place without deleting the last good mirror first."""
+    source = os.path.abspath(os.path.join(source_root, world))
+    target = os.path.abspath(os.path.join(target_root, world))
+    if not os.path.isdir(source):
+        raise FileNotFoundError('源世界目录不存在: {}'.format(source))
+    try:
+        common_path = os.path.commonpath((source, target))
+    except ValueError:
+        # Different Windows drives cannot overlap.
+        common_path = None
+    if source == target or common_path in (source, target):
+        raise ValueError('镜像目录与源世界目录不能互相包含')
+
+    target_parent = os.path.dirname(target)
+    os.makedirs(target_parent, exist_ok=True)
+    temporary_root = tempfile.mkdtemp(
+        prefix='.{}-msr-sync-'.format(os.path.basename(target)),
+        dir=target_parent
+    )
+    staged = os.path.join(temporary_root, 'new')
+    previous = os.path.join(temporary_root, 'previous')
+    moved_previous = False
+    try:
+        shutil.copytree(
+            source,
+            staged,
+            ignore=shutil.ignore_patterns('session.lock')
+        )
+        if os.path.exists(target):
+            os.replace(target, previous)
+            moved_previous = True
+        try:
+            os.replace(staged, target)
+        except Exception:
+            if moved_previous and not os.path.exists(target):
+                os.replace(previous, target)
+            raise
+    finally:
+        shutil.rmtree(temporary_root, ignore_errors=True)
+
+
 @new_thread('MSR-Sync')
 def ServerSync(InterFace):
     global syncFlag
-    syncFlag = True
     start_time = datetime.datetime.now()
-    ignore = shutil.ignore_patterns('session.lock')
-    for world in config['world']:
-        if os.path.exists(f'{config["target"]}/{world}'):
-            shutil.rmtree(f'{config["target"]}/{world}/')
-        if sys.platform == 'win32':
-            shutil.copytree(f'{config["source"]}/{world}', f'{config["target"]}/{world}', ignore=ignore)
-            # os.mkdir(f'{config["target"]}/{world}')
-            # with open('./exclude.txt', 'wt') as f:
-            #     f.write('session.lock')
-            # os.system(f'xcopy "{config["source"]}/{world}" "{config["target"]}/{world}" /e /h /k /y /exclude:{config["source"]}/*/session.lock /exclude:{config["source"]}/*/level.*')
-        else:
-            os.system(f'cp -r {config["source"]}/{world} {config["target"]}/{world}')
-    end_time = datetime.datetime.now()
-    InterFace.execute(
-        f'say §b[MirrorServerReforged] §6同步完成！用时{end_time-start_time}')
-    syncFlag = False
+    try:
+        InterFace.execute('save-off')
+        InterFace.execute('save-all')
+        for world in config['world']:
+            CopyWorld(config['source'], config['target'], world)
+        end_time = datetime.datetime.now()
+        Broadcast(InterFace, '同步完成！用时{}'.format(end_time - start_time))
+    except Exception as e:
+        InterFace.logger.exception('[MirrorServerReforged] 同步失败')
+        Broadcast(InterFace, '同步失败！原因：{}'.format(e), RColor.red)
+    finally:
+        InterFace.execute('save-on')
+        syncFlag = False
 
 
 def Sync():
+    global syncFlag
     InterFace = GetInterFace()
     if syncFlag:
-        InterFace.execute(
-            'say §b[MirrorServerReforged] §d服务器正在进行同步，请不要重复提交同步任务！')
+        Broadcast(InterFace, '服务器正在进行同步，请不要重复提交同步任务！', RColor.light_purple)
     else:
-        InterFace.execute('say §b[MirrorServerReforged] §6正在同步服务器地图……')
-        InterFace.execute('save-off')
-        InterFace.execute('save-all')
+        syncFlag = True
+        Broadcast(InterFace, '正在同步服务器地图……')
         ServerSync(InterFace)
-        InterFace.execute('save-on')
 
 
 @new_thread('MSR-Start')
@@ -163,7 +209,7 @@ def CommandExecute(InterFace):
         else:
             MirrorProcess = subprocess.Popen(config['command'], shell=True)
     except Exception as e:
-        InterFace.execute(f'say §b[MirrorServerReforged] §6启动失败！原因为：{e}')
+        Broadcast(InterFace, '启动失败！原因为：{}'.format(e), RColor.red)
     os.chdir(path)
 
 @new_thread('MSR-Main')
@@ -175,8 +221,7 @@ def ServerStart(InterFace):
         time.sleep(5)
         os.chdir(path)
     except Exception as e:
-        InterFace.execute(
-            'say §b[MirrorServerReforged] §6启动失败！原因为：{}'.format(e))
+        Broadcast(InterFace, '启动失败！原因为：{}'.format(e), RColor.red)
 
 
 def Start(server):
@@ -186,11 +231,10 @@ def Start(server):
     #     server.reply('§b[MirrorServerReforged] §6镜像服正在运行……')
     # else:
     if syncFlag:
-        InterFace.execute('say §b[MirrorServerReforged] §d§l镜像服正在进行同步，请在同步完成后再启动镜像服！')
+        Broadcast(InterFace, '镜像服正在进行同步，请在同步完成后再启动镜像服！', RColor.light_purple)
     else:
-        InterFace.execute('say §b[MirrorServerReforged] §6正在启动镜像服，这可能需要一定的时间……')
-        InterFace.execute(
-            'say §b[MirrorServerReforged] §6启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
+        Broadcast(InterFace, '正在启动镜像服，这可能需要一定的时间……')
+        Broadcast(InterFace, '启动完成后，请自行利用BungeeCord的转服或者直连进行转服！')
         # Started = True
         ServerStart(InterFace)
 
