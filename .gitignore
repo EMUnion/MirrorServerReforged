@@ -1,3 +1,6 @@
 mirror_server_reforged.mcdr
 *.mcdr
 temp/
+
+# LLM generated test files. To prevent adding into plugin along with PR, ignore them
+test/   

@@ -1,0 +1,9 @@
+[project]
+name = "mirror-server-reforged"
+version = "1.0.8"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mcdreforged>=2.15.7",
+]
