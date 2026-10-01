@@ -51,6 +51,7 @@ Now, I'll introduce the content of the config file:
     - `password` is the password of the rcon feature on your mirror server, change it as your need.
 - `source` is the save folder of you main server save.
 - `target` is the save folder of your mirror server save.
+- `check` contains the options of the mirror server startup / shutdown checks (wait timeouts, check intervals, ...). Usually no need to change them.
 
 ## Command List
 
@@ -63,3 +64,5 @@ Now, I'll introduce the content of the config file:
 !!msr init - Initalize mirror server (Use it only when you use MCDR in your mirror server)
 !!msr status - Checkout the status of your mirror server
 ```
+
+After `!!msr start` the plugin broadcasts a notice once the mirror server is ready, and after `!!msr stop` it notifies the command source once the mirror server has fully stopped.
