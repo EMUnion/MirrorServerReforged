@@ -51,6 +51,14 @@ Now, I'll introduce the content of the config file:
     - `password` is the password of the rcon feature on your mirror server, change it as your need.
 - `source` is the save folder of you main server save.
 - `target` is the save folder of your mirror server save.
+- `check` contains the options of the mirror server startup / shutdown checks (wait timeouts, check intervals, ...). Usually no need to change them.
+- `idle_shutdown` contains the options of the idle shutdown, which is disabled by default.
+    - `enable` is the switch of the idle shutdown. Once it is `true`, the mirror server is stopped automatically when nobody has played on it for a while (the rcon feature is needed).
+    - `idle_timeout` is how long (in second) the mirror server may stay empty before it is stopped, e.g. `1800` for half an hour.
+    - `notice_advance` is how long (in second) before that shutdown the players are warned about it, e.g. `300` for 5 minutes.
+    - `countdown` is how many seconds before that shutdown the countdown is broadcast every second, `10` by default.
+    - `check_interval` is the interval (in second) between two online player checks while the shutdown is still far away, `300` by default.
+    - `near_check_interval` is the interval (in second) between two online player checks once the players have been warned and the shutdown is close, `10` by default.
 
 ## Command List
 
@@ -63,3 +71,7 @@ Now, I'll introduce the content of the config file:
 !!msr init - Initalize mirror server (Use it only when you use MCDR in your mirror server)
 !!msr status - Checkout the status of your mirror server
 ```
+
+After `!!msr start` the plugin broadcasts a notice once the mirror server is ready, and after `!!msr stop` it notifies the command source once the mirror server has fully stopped.
+
+With `idle_shutdown` enabled the mirror server is stopped automatically once it has stayed empty for `idle_timeout`: the players are warned once `notice_advance` before the shutdown, a countdown is broadcast every second during the last `countdown` seconds, and one more notice follows after the mirror server has fully stopped. The checks adapt to how close the shutdown is: `check_interval` while it is still far away, and `near_check_interval` once the players have been warned, with a check every second during the countdown. If a player joins the mirror server during that countdown, the countdown is called off and a notice about it is broadcast to both the main server and the mirror server; the mirror server keeps running until it falls idle again.
